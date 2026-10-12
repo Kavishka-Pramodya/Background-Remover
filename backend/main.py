@@ -1,0 +1,68 @@
+import asyncio
+import logging
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from backend.routes.health import router as health_router
+from backend.routes.templates import router as templates_router
+from backend.routes.process import router as process_router
+from backend.routes.results import router as results_router
+from backend.services.remover import init_remover
+from backend.utils.temp_manager import cleanup_expired_files
+from backend.config import CLEANUP_INTERVAL_MINUTES
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("product_studio")
+
+async def background_cleanup_loop():
+    """Periodically clean up expired images."""
+    while True:
+        try:
+            await asyncio.sleep(CLEANUP_INTERVAL_MINUTES * 60)
+            logger.info("Running expired file cleanup...")
+            cleanup_expired_files()
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            logger.error(f"Error during cleanup: {e}")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Initialize background remover and start cleanup worker
+    logger.info("Initializing Product Image Studio backend services...")
+    init_remover()
+    cleanup_task = asyncio.create_task(background_cleanup_loop())
+    yield
+    # Shutdown: Clean up background tasks
+    cleanup_task.cancel()
+    try:
+        await cleanup_task
+    except asyncio.CancelledError:
+        pass
+    logger.info("Backend shut down cleanly.")
+
+app = FastAPI(
+    title="Product Image Studio API",
+    description="High-quality e-commerce product image creation with background removal and studio presets.",
+    version="1.0.0",
+    lifespan=lifespan
+)
+
+# CORS setup — allow local development frontend and production Vercel apps
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Register API routes with /api prefix
+app.include_router(health_router, prefix="/api", tags=["Health"])
+app.include_router(templates_router, prefix="/api", tags=["Templates"])
+app.include_router(process_router, prefix="/api", tags=["Processing"])
+app.include_router(results_router, prefix="/api", tags=["Results"])
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("backend.main:app", host="127.0.0.1", port=8000, reload=True)

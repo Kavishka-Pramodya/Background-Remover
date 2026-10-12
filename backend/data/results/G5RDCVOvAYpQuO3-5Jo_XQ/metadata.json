@@ -1,0 +1,18 @@
+{
+  "result_id": "G5RDCVOvAYpQuO3-5Jo_XQ",
+  "status": "completed",
+  "preview_url": "/api/results/G5RDCVOvAYpQuO3-5Jo_XQ/preview",
+  "download_url": "/api/results/G5RDCVOvAYpQuO3-5Jo_XQ/download",
+  "original_filename": "ee99f64c1dd5ad1f344cbef65d78f413.jpg",
+  "original_dimensions": [
+    1000,
+    1000
+  ],
+  "output_dimensions": [
+    1200,
+    1200
+  ],
+  "template_id": "premium_light",
+  "output_format": "png",
+  "created_at": "2026-10-12T21:45:24.206346Z"
+}
