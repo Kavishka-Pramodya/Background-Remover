@@ -9,3 +9,4 @@ tests/sample_product.png
 tests/__pycache__/
 backend/__pycache__/
 backend/*/__pycache__/
+*.zip

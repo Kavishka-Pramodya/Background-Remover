@@ -153,6 +153,19 @@ const Utils = (() => {
         });
     }
 
+    /**
+     * Escape HTML special characters for safe template rendering.
+     */
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
     return {
         $,
         createObjectURL,
@@ -165,6 +178,7 @@ const Utils = (() => {
         toggle,
         showToast,
         validateImageFile,
-        getImageDimensions
+        getImageDimensions,
+        escapeHtml
     };
 })();

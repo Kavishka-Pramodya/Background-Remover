@@ -129,54 +129,11 @@ const AdminManager = (() => {
     }
 
     /**
-     * Generates and downloads the Windows 1-click batch runner.
+     * Downloads the complete Local AI Studio bundle (.zip).
      */
     function downloadLocalEngineScript() {
-        const scriptContent = `@echo off
-title Aura Store - Local AI Studio Engine
-color 0A
-cls
-echo ===================================================================
-echo     AURA E-COMMERCE - LOCAL AI PRODUCT IMAGE STUDIO ENGINE
-echo ===================================================================
-echo.
-echo  Starting local AI background removal engine on your machine...
-echo  URL: http://127.0.0.1:8000
-echo.
-echo  [Benefits]
-echo  - 100%% Free forever (Zero cloud hosting bills)
-echo  - Unlimited product photos for your store
-echo  - Super-fast processing powered by your own CPU/GPU
-echo.
-echo ===================================================================
-echo.
-
-cd /d "%~dp0"
-
-REM Try launching python uvicorn
-python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
-
-if %ERRORLEVEL% NEQ 0 (
-    echo.
-    echo [ERROR] Python not found or requirements missing.
-    echo Please make sure Python 3.10+ is installed on your system.
-    echo.
-    pause
-)
-pause
-`;
-
-        const blob = new Blob([scriptContent], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'start_local_studio.bat';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-
-        Utils.showToast('Downloaded start_local_studio.bat! Double-click to start the engine.', 'success', 4000);
+        window.open('https://github.com/Kavishka-Pramodya/Background-Remover/archive/refs/heads/main.zip', '_blank');
+        Utils.showToast('Downloading Aura Local AI package! Extract & run start_local_studio.bat', 'success', 5000);
     }
 
     /**

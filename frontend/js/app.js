@@ -111,15 +111,42 @@ const App = (() => {
             });
         }
 
-        // Keyboard: Escape to close modal
+        // Local engine modal bindings
+        const localEngineModal = Utils.$('localEngineModal');
+        const localEngineModalClose = Utils.$('localEngineModalClose');
+        const btnModalTryDemoMode = Utils.$('btnModalTryDemoMode');
+
+        if (localEngineModalClose && localEngineModal) {
+            localEngineModalClose.addEventListener('click', () => Utils.hide(localEngineModal));
+        }
+        if (localEngineModal) {
+            localEngineModal.addEventListener('click', (e) => {
+                if (e.target === localEngineModal) Utils.hide(localEngineModal);
+            });
+        }
+        if (btnModalTryDemoMode) {
+            btnModalTryDemoMode.addEventListener('click', () => {
+                if (localEngineModal) Utils.hide(localEngineModal);
+                onProcessClick(false, true);
+            });
+        }
+
+        // Keyboard: Escape to close modals
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 Utils.hide(Utils.$('helpModal'));
+                Utils.hide(Utils.$('localEngineModal'));
             }
         });
     }
 
     async function _checkBackend() {
+        if (typeof AdminManager !== 'undefined' && AdminManager.isLocalEngineActive()) {
+            state.backendAvailable = true;
+            _updateProcessButton();
+            return true;
+        }
+
         try {
             const health = await ApiService.checkHealth();
             state.backendAvailable = health.status === 'healthy';
@@ -127,11 +154,12 @@ const App = (() => {
                 console.log('Backend connected:', health);
             }
         } catch (err) {
-            state.backendAvailable = false;
+            state.backendAvailable = (typeof AdminManager !== 'undefined' && AdminManager.isLocalEngineActive());
             console.warn('Backend not available:', err.message);
         }
 
         _updateProcessButton();
+        return state.backendAvailable;
     }
 
     function _updateProcessButton() {
@@ -249,7 +277,7 @@ const App = (() => {
         }
     }
 
-    async function onProcessClick(preferFastReprocess = false) {
+    async function onProcessClick(preferFastReprocess = false, forceDemo = false) {
         if (state.isProcessing) return;
 
         if (!state.currentFile) {
@@ -257,31 +285,26 @@ const App = (() => {
             return;
         }
 
-        const templateId = TemplateManager.getSelectedId();
-        if (!templateId) {
-            Utils.showToast('Please select a background template.', 'error');
-            return;
-        }
+        const templateId = TemplateManager.getSelectedId() || 'premium_light';
 
-        // Check backend availability
-        if (!state.backendAvailable) {
-            try {
-                await _checkBackend();
-            } catch { /* ignore */ }
+        // Check backend availability unless forceDemo is explicitly selected
+        if (!forceDemo) {
+            await _checkBackend();
 
             if (!state.backendAvailable) {
-                const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-                const msg = isLocal
-                    ? 'Server not available. Start the local backend with: uvicorn backend.main:app --host 127.0.0.1 --port 8000'
-                    : 'Cloud backend is starting up or waking from sleep. Please wait a moment and click Try Again.';
-                Utils.showToast('Connecting to the cloud server...', 'info');
-                _showProcessingError(msg);
-                return;
+                const localModal = Utils.$('localEngineModal');
+                if (localModal) {
+                    Utils.show(localModal);
+                    return;
+                }
             }
         }
 
+        const localModal = Utils.$('localEngineModal');
+        if (localModal) Utils.hide(localModal);
+
         const resultId = PreviewManager.getResultId();
-        const canFastReprocess = preferFastReprocess && state.hasResult && Boolean(resultId);
+        const canFastReprocess = preferFastReprocess && state.hasResult && Boolean(resultId) && !resultId.startsWith('demo_');
 
         state.isProcessing = true;
 
@@ -295,8 +318,8 @@ const App = (() => {
             Utils.hide(Utils.$('downloadSection'));
             Utils.hide(Utils.$('comparisonView'));
             Utils.show(Utils.$('processingState'));
-            if (processingMsg) processingMsg.textContent = 'Removing background...';
-            if (processingSub) processingSub.textContent = 'Extracting product using AI...';
+            if (processingMsg) processingMsg.textContent = forceDemo ? 'Creating Studio Card...' : 'Removing background...';
+            if (processingSub) processingSub.textContent = forceDemo ? 'Compositing lighting & shadows...' : 'Extracting product using AI...';
         } else {
             // Subtle indicator if already showing result
             if (processingMsg) processingMsg.textContent = 'Updating background & shadow...';
@@ -311,12 +334,14 @@ const App = (() => {
         try {
             let result;
 
-            if (canFastReprocess) {
+            if (forceDemo || (!state.backendAvailable && !canFastReprocess)) {
+                // Client-side instant canvas compositor
+                result = await _generateClientSideDemoPreview(state.currentFile, settings);
+            } else if (canFastReprocess) {
                 // Instant re-compositing using pre-extracted cutout (~50ms)
                 try {
                     result = await ApiService.reprocessImage(resultId, settings);
                 } catch (reErr) {
-                    // Fall back to full processing if cache expired
                     console.warn('Fast reprocess failed, falling back to full process:', reErr.message);
                     result = await ApiService.processImage(state.currentFile, settings);
                 }
@@ -333,13 +358,17 @@ const App = (() => {
 
             PreviewManager.showResult(result);
             if (typeof AdminManager !== 'undefined') {
-                const previewUrl = ApiService.getPreviewURL(result.result_id);
+                const previewUrl = result.preview_url || ApiService.getPreviewURL(result.result_id);
                 AdminManager.setProcessedImage(previewUrl, state.currentOriginalUrl);
             }
 
             const selectedTpl = TemplateManager.getSelectedTemplate();
             const name = selectedTpl ? selectedTpl.name : 'Studio';
-            Utils.showToast(`Applied ${name}!`, 'success', 2500);
+            if (result.is_demo) {
+                Utils.showToast(`Preview created with ${name}! (Run Local AI engine for precision edge cutout)`, 'info', 4000);
+            } else {
+                Utils.showToast(`Applied ${name}!`, 'success', 2500);
+            }
 
         } catch (err) {
             state.isProcessing = false;
@@ -355,6 +384,72 @@ const App = (() => {
             _showProcessingError(err.message || 'An unexpected error occurred during processing.');
             Utils.showToast(err.message || 'Processing failed', 'error');
         }
+    }
+
+    async function _generateClientSideDemoPreview(file, settings) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = 1200;
+                canvas.height = 1200;
+                const ctx = canvas.getContext('2d');
+
+                // 1. Fill background based on template
+                const tplId = settings.template_id || 'premium_light';
+                let grad = ctx.createLinearGradient(0, 0, 0, 1200);
+                if (tplId === 'warm_neutral') {
+                    grad.addColorStop(0, '#fbf8f3');
+                    grad.addColorStop(1, '#eee7dd');
+                } else if (tplId === 'soft_gray') {
+                    grad.addColorStop(0, '#f3f4f6');
+                    grad.addColorStop(1, '#e5e7eb');
+                } else if (tplId === 'studio_dark') {
+                    grad.addColorStop(0, '#2d3748');
+                    grad.addColorStop(1, '#1a202c');
+                } else {
+                    grad.addColorStop(0, '#ffffff');
+                    grad.addColorStop(1, '#f1f5f9');
+                }
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, 1200, 1200);
+
+                // 2. Floor shadow oval
+                const shadowIntensity = (settings.shadow_intensity != null ? settings.shadow_intensity : 40) / 100;
+                ctx.save();
+                ctx.beginPath();
+                ctx.ellipse(600, 960, 320, 50, 0, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(0, 0, 0, ${shadowIntensity * 0.25})`;
+                ctx.filter = `blur(${settings.shadow_softness || 30}px)`;
+                ctx.fill();
+                ctx.restore();
+
+                // 3. Draw scaled product image
+                const scale = (settings.scale != null ? settings.scale : 80) / 100;
+                const aspect = img.width / img.height;
+                let drawW = 900 * scale;
+                let drawH = drawW / aspect;
+                if (drawH > 900 * scale) {
+                    drawH = 900 * scale;
+                    drawW = drawH * aspect;
+                }
+                const drawX = 600 - drawW / 2;
+                const posYFactor = (settings.position_y != null ? settings.position_y : 50) / 100;
+                const drawY = (1200 - drawH) * posYFactor;
+
+                ctx.drawImage(img, drawX, drawY, drawW, drawH);
+
+                const dataUrl = canvas.toDataURL('image/png');
+                resolve({
+                    result_id: 'demo_' + Date.now(),
+                    preview_url: dataUrl,
+                    is_demo: true,
+                    processing_time: 0.1
+                });
+            };
+            img.onerror = () => reject(new Error('Failed to load image for preview.'));
+            img.src = URL.createObjectURL(file);
+        });
     }
 
     function _showProcessingError(message) {

@@ -49,18 +49,20 @@ const PreviewManager = (() => {
      */
     function showResult(resultData) {
         _resultId = resultData.result_id;
-        _resultURL = ApiService.getPreviewURL(resultData.result_id);
+        _resultURL = resultData.preview_url || ApiService.getPreviewURL(resultData.result_id);
 
         const resultCard = Utils.$('previewResult');
         const resultImg = Utils.$('resultImage');
 
+        const displayUrl = _resultURL.startsWith('data:') ? _resultURL : `${_resultURL}?t=${Date.now()}`;
+
         if (resultImg) {
-            resultImg.src = `${_resultURL}?t=${Date.now()}`;
+            resultImg.src = displayUrl;
         }
 
         const afterImg = Utils.$('comparisonAfter');
         if (afterImg) {
-            afterImg.src = `${_resultURL}?t=${Date.now()}`;
+            afterImg.src = displayUrl;
         }
 
         Utils.show(resultCard);
