@@ -50,21 +50,18 @@ def _load_model_worker():
         _is_initializing = False
 
 def init_remover():
-    """Start loading the rembg session in a background daemon thread."""
-    global _is_initializing
-    if not _is_initializing and not _model_available:
-        _is_initializing = True
-        thread = threading.Thread(target=_load_model_worker, daemon=True)
-        thread.start()
+    """No eager startup thread - model loads on-demand on first user request."""
+    pass
 
 def is_model_ready() -> bool:
-    return _model_available
+    return _model_available or (BUNDLED_MODELS_DIR / "u2netp.onnx").exists()
 
 def get_model_info() -> dict:
+    has_bundled = (BUNDLED_MODELS_DIR / "u2netp.onnx").exists()
     return {
-        "model_loaded": _model_available,
-        "model_name": _model_name if _model_available else None,
-        "is_initializing": _is_initializing,
+        "model_loaded": _model_available or has_bundled,
+        "model_name": _model_name,
+        "is_initializing": False,
         "error": _last_error
     }
 

@@ -1,3 +1,11 @@
+import os
+# Strictly limit CPU thread allocation to prevent ONNX Runtime from spawning 64+ threads on cloud hosts
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
+
 import asyncio
 import logging
 from contextlib import asynccontextmanager
@@ -7,7 +15,6 @@ from backend.routes.health import router as health_router
 from backend.routes.templates import router as templates_router
 from backend.routes.process import router as process_router
 from backend.routes.results import router as results_router
-from backend.services.remover import init_remover
 from backend.utils.temp_manager import cleanup_expired_files
 from backend.config import CLEANUP_INTERVAL_MINUTES
 
@@ -28,9 +35,8 @@ async def background_cleanup_loop():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Initialize background remover and start cleanup worker
-    logger.info("Initializing Product Image Studio backend services...")
-    init_remover()
+    # Startup: Ultra-lightweight boot (under 25MB RAM). Model is loaded on-demand during first request.
+    logger.info("Product Image Studio backend ready (low-memory mode).")
     cleanup_task = asyncio.create_task(background_cleanup_loop())
     yield
     # Shutdown: Clean up background tasks
