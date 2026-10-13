@@ -71,31 +71,42 @@ def get_model_info() -> dict:
 def remove_background(image: Image.Image) -> Image.Image:
     """Remove background from image and return transparent RGBA PIL Image."""
     global _session, _model_available, _model_name
+    import gc
 
-    # If already loaded, use session
-    if _session is not None:
-        try:
-            from rembg import remove
-            output = remove(image, session=_session)
-            return output
-        except Exception as e:
-            logger.error(f"rembg removal failed with session: {e}")
-            raise RuntimeError(f"Background removal failed: {str(e)}")
+    # Cap maximum dimension to 1200px during inference to stay well within 512MB RAM limits
+    max_dim = max(image.width, image.height)
+    orig_size = image.size
+    img_to_process = image
+    if max_dim > 1200:
+        scale_ratio = 1200.0 / max_dim
+        new_w = max(1, int(image.width * scale_ratio))
+        new_h = max(1, int(image.height * scale_ratio))
+        img_to_process = image.resize((new_w, new_h), Image.Resampling.LANCZOS)
 
-    # Otherwise load synchronously on demand
     try:
-        from rembg import remove, new_session
-        logger.info(f"Loading rembg session on demand ({_model_name})...")
-        try:
-            _session = new_session(_model_name)
-        except Exception:
-            _model_name = "u2netp"
-            _session = new_session("u2netp")
+        # If session not yet loaded, load it on demand
+        if _session is None:
+            from rembg import new_session
+            logger.info(f"Loading rembg session on demand ({_model_name})...")
+            try:
+                _session = new_session(_model_name)
+            except Exception:
+                _model_name = "u2netp"
+                _session = new_session("u2netp")
+            _model_available = True
 
-        _model_available = True
-        output = remove(image, session=_session)
+        from rembg import remove
+        output = remove(img_to_process, session=_session)
+
+        # If downscaled for inference, upscale back to original resolution
+        if orig_size != img_to_process.size:
+            output = output.resize(orig_size, Image.Resampling.LANCZOS)
+
         return output
     except Exception as e:
         logger.error(f"Failed to remove background: {e}")
         raise RuntimeError(f"Background removal service error: {str(e)}")
+    finally:
+        gc.collect()
+
 
