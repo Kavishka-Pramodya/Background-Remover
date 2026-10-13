@@ -69,7 +69,7 @@ echo.
 echo [2/2] Starting Local AI Server on http://127.0.0.1:8000 ...
 echo Keep this window open while processing product images in Aura Store!
 echo.
-python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
+python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000
 if %ERRORLEVEL% NEQ 0 (
     echo.
     echo [NOTICE] Server stopped.

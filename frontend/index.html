@@ -163,8 +163,11 @@
                             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                             Download Local AI (.zip)
                         </a>
-                        <a href="downloads/start_local_studio.bat" download="start_local_studio.bat" class="btn btn--outline btn--sm" id="btnDownloadBat">
-                            Runner Only (.bat)
+                        <a href="downloads/start_local_studio.bat" download="start_local_studio.bat" class="btn btn--outline btn--sm" id="btnDownloadBat" title="For Windows PCs">
+                            🪟 Windows (.bat)
+                        </a>
+                        <a href="downloads/start_local_studio.command" download="start_local_studio.command" class="btn btn--outline btn--sm" id="btnDownloadMac" title="For Apple MacBooks & iMacs">
+                            🍎 Mac (.command)
                         </a>
                         <button class="btn btn--ghost btn--sm" onclick="AdminManager.checkLocalHealth()" type="button">
                             🔄 Re-check Status
@@ -573,8 +576,16 @@
                 <div style="display: flex; flex-direction: column; gap: 0.75rem;">
                     <a href="https://github.com/Kavishka-Pramodya/Background-Remover/archive/refs/heads/main.zip" target="_blank" rel="noopener" class="btn btn--primary btn--lg" id="btnModalDownloadZip" style="text-align: center; justify-content: center;">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                        Download Local AI Package (.zip)
+                        Download Full AI Package (.zip)
                     </a>
+                    <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                        <a href="downloads/start_local_studio.bat" download="start_local_studio.bat" class="btn btn--outline btn--sm" style="flex: 1; justify-content: center;">
+                            🪟 Windows (.bat)
+                        </a>
+                        <a href="downloads/start_local_studio.command" download="start_local_studio.command" class="btn btn--outline btn--sm" style="flex: 1; justify-content: center;">
+                            🍎 Mac (.command)
+                        </a>
+                    </div>
                     <button class="btn btn--outline" id="btnModalTryDemoMode" type="button" style="justify-content: center;">
                         ⚡ Test in Demo Canvas Mode (Without starting local backend)
                     </button>
