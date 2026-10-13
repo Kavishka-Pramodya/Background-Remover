@@ -5,13 +5,21 @@
  * Returns normalised responses and handles network/server errors.
  */
 const ApiService = (() => {
-    // Automatically switch between Localhost and Production Hugging Face URL
-    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    
     // Production Render Backend URL (or configurable via window.API_BASE_URL)
     const PROD_URL = window.API_BASE_URL || 'https://background-remover-mk8t.onrender.com';
     
-    const BASE_URL = isLocal ? 'http://127.0.0.1:8000' : PROD_URL;
+    function getBaseURL() {
+        // 1. If Store Owner has local companion engine running, prioritize it!
+        if (typeof AdminManager !== 'undefined' && AdminManager.isLocalEngineActive()) {
+            return 'http://127.0.0.1:8000';
+        }
+        // 2. If running on localhost in development
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            return 'http://127.0.0.1:8000';
+        }
+        // 3. Fallback to Cloud deployment
+        return PROD_URL;
+    }
 
     /** Track the current AbortController for cancellable requests */
     let _currentAbort = null;
@@ -20,7 +28,7 @@ const ApiService = (() => {
      * Internal fetch wrapper with error normalisation.
      */
     async function _request(path, options = {}) {
-        const url = `${BASE_URL}${path}`;
+        const url = `${getBaseURL()}${path}`;
         try {
             const response = await fetch(url, options);
             if (!response.ok) {
@@ -149,28 +157,28 @@ const ApiService = (() => {
      * Get the preview image URL for a result.
      */
     function getPreviewURL(resultId) {
-        return `${BASE_URL}/api/results/${resultId}/preview`;
+        return `${getBaseURL()}/api/results/${resultId}/preview`;
     }
 
     /**
      * Get the raw cutout image URL for eraser / touchup tool.
      */
     function getCutoutURL(resultId) {
-        return `${BASE_URL}/api/results/${resultId}/cutout`;
+        return `${getBaseURL()}/api/results/${resultId}/cutout`;
     }
 
     /**
      * Get the download URL for a result.
      */
     function getDownloadURL(resultId, format = 'png') {
-        return `${BASE_URL}/api/results/${resultId}/download?format=${format}`;
+        return `${getBaseURL()}/api/results/${resultId}/download?format=${format}`;
     }
 
     /**
      * Get the template preview URL with full backend domain.
      */
     function getTemplatePreviewURL(templateId) {
-        return `${BASE_URL}/api/templates/${templateId}/preview`;
+        return `${getBaseURL()}/api/templates/${templateId}/preview`;
     }
 
     /**

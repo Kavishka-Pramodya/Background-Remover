@@ -18,6 +18,8 @@ const App = (() => {
 
     function init() {
         // Initialize modules
+        if (typeof StoreManager !== 'undefined') StoreManager.init();
+        if (typeof AdminManager !== 'undefined') AdminManager.init();
         UploadManager.init(onFileAccepted);
         TemplateManager.init(onTemplateSelected);
         ControlsManager.init(onControlsChanged);
@@ -27,11 +29,27 @@ const App = (() => {
         // Wire up buttons
         _bindActions();
 
+        // Show storefront by default
+        showScreen('storefront');
+
         // Check backend health
         _checkBackend();
     }
 
     function _bindActions() {
+        // Screen mode switching: Storefront vs Store Owner Admin
+        const navStorefront = Utils.$('navStorefront');
+        const navAdminPortal = Utils.$('navAdminPortal');
+        const btnGoToAdmin = Utils.$('btnGoToAdmin');
+        const btnBackToStore = Utils.$('btnBackToStore');
+
+        if (navStorefront) navStorefront.addEventListener('click', () => showScreen('storefront'));
+        if (navAdminPortal) navAdminPortal.addEventListener('click', () => showScreen('admin'));
+        if (btnGoToAdmin) btnGoToAdmin.addEventListener('click', () => showScreen('admin'));
+        if (btnBackToStore) btnBackToStore.addEventListener('click', () => showScreen('storefront'));
+        const brandLogo = Utils.$('brandLogo');
+        if (brandLogo) brandLogo.addEventListener('click', () => showScreen('storefront'));
+
         // Process button
         const btnProcess = Utils.$('btnProcess');
         if (btnProcess) {
@@ -127,13 +145,34 @@ const App = (() => {
     function showScreen(screenName) {
         state.currentScreen = screenName;
 
-        document.querySelectorAll('.screen').forEach(screen => {
-            screen.classList.remove('active');
-        });
+        const screenStorefront = Utils.$('screenStorefront');
+        const screenAdmin = Utils.$('screenAdmin');
+        const screenUpload = Utils.$('screenUpload');
+        const screenEditor = Utils.$('screenEditor');
+        const navStorefront = Utils.$('navStorefront');
+        const navAdminPortal = Utils.$('navAdminPortal');
 
-        const targetScreen = Utils.$(`screen${screenName.charAt(0).toUpperCase() + screenName.slice(1)}`);
-        if (targetScreen) {
-            targetScreen.classList.add('active');
+        if (screenName === 'storefront') {
+            if (screenStorefront) screenStorefront.classList.add('active');
+            if (screenAdmin) screenAdmin.classList.remove('active');
+            if (navStorefront) navStorefront.classList.add('active');
+            if (navAdminPortal) navAdminPortal.classList.remove('active');
+            if (typeof StoreManager !== 'undefined') StoreManager.renderProducts();
+        } else if (screenName === 'admin' || screenName === 'upload') {
+            if (screenStorefront) screenStorefront.classList.remove('active');
+            if (screenAdmin) screenAdmin.classList.add('active');
+            if (screenUpload) Utils.show(screenUpload);
+            if (screenEditor) Utils.hide(screenEditor);
+            if (navStorefront) navStorefront.classList.remove('active');
+            if (navAdminPortal) navAdminPortal.classList.add('active');
+            if (typeof AdminManager !== 'undefined') AdminManager.renderCatalogTable();
+        } else if (screenName === 'editor') {
+            if (screenStorefront) screenStorefront.classList.remove('active');
+            if (screenAdmin) screenAdmin.classList.add('active');
+            if (screenUpload) Utils.hide(screenUpload);
+            if (screenEditor) Utils.show(screenEditor);
+            if (navStorefront) navStorefront.classList.remove('active');
+            if (navAdminPortal) navAdminPortal.classList.add('active');
         }
     }
 
@@ -142,7 +181,12 @@ const App = (() => {
     function onFileAccepted(file, dimensions) {
         state.currentFile = file;
         state.currentDimensions = dimensions;
+        state.currentOriginalUrl = URL.createObjectURL(file);
         state.hasResult = false;
+
+        if (typeof AdminManager !== 'undefined') {
+            AdminManager.setProcessedImage(state.currentOriginalUrl, state.currentOriginalUrl);
+        }
 
         // Show editor screen
         showScreen('editor');
@@ -288,6 +332,10 @@ const App = (() => {
             Utils.show(Utils.$('btnProcess'));
 
             PreviewManager.showResult(result);
+            if (typeof AdminManager !== 'undefined') {
+                const previewUrl = ApiService.getPreviewURL(result.result_id);
+                AdminManager.setProcessedImage(previewUrl, state.currentOriginalUrl);
+            }
 
             const selectedTpl = TemplateManager.getSelectedTemplate();
             const name = selectedTpl ? selectedTpl.name : 'Studio';
@@ -350,6 +398,10 @@ const App = (() => {
             state.isProcessing = false;
             Utils.hide(Utils.$('processingState'));
             PreviewManager.showResult(result);
+            if (typeof AdminManager !== 'undefined') {
+                const previewUrl = ApiService.getPreviewURL(result.result_id);
+                AdminManager.setProcessedImage(previewUrl, state.currentOriginalUrl);
+            }
             Utils.showToast('Touch-up applied successfully!', 'success');
         } catch (err) {
             state.isProcessing = false;
