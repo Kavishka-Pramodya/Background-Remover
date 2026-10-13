@@ -6,22 +6,22 @@
  */
 const StoreManager = (() => {
 
-    const STORAGE_KEY = 'aura_store_products_v1';
+    const STORAGE_KEY = 'aura_store_products_v2';
     const CART_KEY = 'aura_store_cart_v1';
 
     // Initial pre-loaded luxury demo products
     const DEFAULT_PRODUCTS = [
         {
             id: 'prod-1',
-            title: 'Luxe Italian Leather Briefcase',
+            title: 'Tuscan Leather Travel Holdall',
             category: 'bags',
             categoryLabel: 'Bags & Leather',
             price: 18500,
             originalPrice: 22000,
             rating: 4.9,
             reviewsCount: 38,
-            badge: 'Studio AI Created',
-            description: 'Handcrafted full-grain leather briefcase with brass hardware. Photographed on a phone and enhanced with Aura Studio AI.',
+            badge: 'Artisan Edition',
+            description: 'Handcrafted from vegetable-tanned full-grain Tuscan leather with antiqued brass hardware and reinforced saddle stitching.',
             image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=700&q=80',
             phonePhoto: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=700&q=80',
             template: 'Premium Light Studio',
@@ -29,15 +29,15 @@ const StoreManager = (() => {
         },
         {
             id: 'prod-2',
-            title: 'Minimalist Chrono Obsidian Watch',
+            title: 'Minimalist Obsidian Chronograph',
             category: 'watches',
             categoryLabel: 'Watches & Tech',
             price: 24900,
             originalPrice: 28500,
             rating: 5.0,
             reviewsCount: 52,
-            badge: 'Studio AI Created',
-            description: 'Matte black stainless steel chronometer with sapphire crystal glass and Japanese quartz movement.',
+            badge: 'Best Seller',
+            description: 'Brushed surgical-grade 316L stainless steel casing, scratch-resistant sapphire crystal, and Japanese chronograph movement.',
             image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=700&q=80',
             phonePhoto: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=700&q=80',
             template: 'Soft Gray Studio',
@@ -45,15 +45,15 @@ const StoreManager = (() => {
         },
         {
             id: 'prod-3',
-            title: 'Oud & Amber Artisan Eau de Parfum',
+            title: 'Oud & Santal Artisan Eau de Parfum',
             category: 'fragrances',
             categoryLabel: 'Fragrances',
             price: 12800,
             originalPrice: 15000,
             rating: 4.8,
             reviewsCount: 29,
-            badge: 'Studio AI Created',
-            description: 'Rich oriental scent with notes of wild oud, warm amber, and smoky bergamot. Luxury 100ml flacon.',
+            badge: 'Signature Scent',
+            description: 'Artisanal small-batch formulation featuring wild Cambodian agarwood, velvety Mysore sandalwood, and sun-drenched bergamot.',
             image: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=700&q=80',
             phonePhoto: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=700&q=80',
             template: 'Warm Neutral Studio',
@@ -61,15 +61,15 @@ const StoreManager = (() => {
         },
         {
             id: 'prod-4',
-            title: 'Apex Cloudfoam Running Sneakers',
+            title: 'Apex Engineered Cloud Sneakers',
             category: 'footwear',
             categoryLabel: 'Footwear',
             price: 15400,
             originalPrice: 18000,
             rating: 4.9,
             reviewsCount: 64,
-            badge: 'Studio AI Created',
-            description: 'Ultra-light breathable mesh athletic sneakers with adaptive carbon-infused bounce cushioning.',
+            badge: 'New Arrival',
+            description: 'Featherweight technical woven upper with dual-density nitrogen-infused midsole for effortless all-day performance.',
             image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=700&q=80',
             phonePhoto: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=700&q=80',
             template: 'Premium Light Studio',
@@ -198,8 +198,8 @@ const StoreManager = (() => {
             originalPrice: productData.originalPrice ? Number(productData.originalPrice) : Math.round(Number(productData.price) * 1.2),
             rating: 5.0,
             reviewsCount: 1,
-            badge: '✨ Just Added with AI Studio',
-            description: productData.description || 'Newly added product card created with Aura AI Studio.',
+            badge: 'New Arrival',
+            description: productData.description || 'Newly curated piece in the Aura Atelier collection.',
             image: productData.image,
             phonePhoto: productData.phonePhoto || null,
             template: productData.template || 'Studio Template',
@@ -247,9 +247,11 @@ const StoreManager = (() => {
         if (filtered.length === 0) {
             grid.innerHTML = `
                 <div class="empty-catalog-state">
-                    <div class="empty-icon">🛍️</div>
+                    <div class="empty-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    </div>
                     <h3>No products found</h3>
-                    <p>Try searching with another keyword or add a new product in the Store Owner Portal.</p>
+                    <p>Try refining your search keyword or browse other curated categories.</p>
                 </div>
             `;
             return;
@@ -359,9 +361,11 @@ const StoreManager = (() => {
         if (_cart.length === 0) {
             listEl.innerHTML = `
                 <div class="cart-empty">
-                    <div class="cart-empty-icon">🛒</div>
-                    <p>Your shopping cart is empty.</p>
-                    <button class="btn btn--outline btn--sm" onclick="StoreManager.closeCart()">Continue Shopping</button>
+                    <div class="cart-empty-icon">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                    </div>
+                    <p>Your shopping bag is currently empty.</p>
+                    <button class="btn btn--outline btn--sm" onclick="StoreManager.closeCart()">Continue Browsing</button>
                 </div>
             `;
             return;
@@ -414,10 +418,10 @@ const StoreManager = (() => {
                     <img id="qvMainImage" src="${product.image}" alt="${Utils.escapeHtml(product.title)}" class="quickview-img">
                     ${product.phonePhoto ? `
                         <div class="qv-photo-toggle">
-                            <span class="qv-toggle-label">Compare Photography:</span>
+                            <span class="qv-toggle-label">Photography View:</span>
                             <div class="qv-toggle-buttons">
-                                <button class="btn btn--xs btn--primary" id="btnShowStudioCard" onclick="document.getElementById('qvMainImage').src='${product.image}'">✨ Studio Card</button>
-                                <button class="btn btn--xs btn--outline" id="btnShowPhonePhoto" onclick="document.getElementById('qvMainImage').src='${product.phonePhoto}'">📱 Raw Phone Photo</button>
+                                <button class="btn btn--xs btn--primary" id="btnShowStudioCard" onclick="document.getElementById('qvMainImage').src='${product.image}'">Studio Presentation</button>
+                                <button class="btn btn--xs btn--outline" id="btnShowPhonePhoto" onclick="document.getElementById('qvMainImage').src='${product.phonePhoto}'">Original Capture</button>
                             </div>
                         </div>
                     ` : ''}

@@ -92,33 +92,33 @@ const AdminManager = (() => {
                     _localEngineConnected = true;
                     if (badge) {
                         badge.className = 'engine-badge engine-badge--online';
-                        badge.innerHTML = '<span class="status-dot"></span> Local AI Engine Active';
+                        badge.innerHTML = '<span class="status-dot"></span> Studio Engine Online';
                     }
                     if (text) {
-                        text.textContent = 'Connected (http://127.0.0.1:8000) — Zero Cloud Fees, 100% Free Unlimited Processing on your PC!';
+                        text.textContent = 'Hardware acceleration active on port 8000 — Unlimited native rendering at full resolution.';
                     }
                     if (hint) {
-                        hint.innerHTML = '⚡ <strong>Running locally on your machine:</strong> Fast, private, and unlimited.';
+                        hint.innerHTML = '✦ <strong>Native Workstation Pipeline:</strong> High throughput, zero latency, complete data privacy.';
                     }
-                    Utils.showToast('Local AI Engine Connected! Ready for studio creations.', 'success', 2500);
+                    Utils.showToast('Hardware Studio Engine Connected. Ready for studio photography.', 'success', 2500);
                 }
                 return true;
             }
         } catch {
             // Local engine is offline
             if (_localEngineConnected) {
-                Utils.showToast('Local AI engine disconnected.', 'info');
+                Utils.showToast('Hardware engine disconnected.', 'info');
             }
             _localEngineConnected = false;
             if (badge) {
                 badge.className = 'engine-badge engine-badge--offline';
-                badge.innerHTML = '<span class="status-dot"></span> Local Engine Offline';
+                badge.innerHTML = '<span class="status-dot"></span> Engine Standby';
             }
             if (text) {
-                text.textContent = 'Not detected on port 8000. Run the 1-click helper on your computer to process locally.';
+                text.textContent = 'Hardware engine not detected on port 8000. Launch companion script to enable native processing.';
             }
             if (hint) {
-                hint.innerHTML = '💡 <strong>Store Owner Tip:</strong> Click <em>"Download 1-Click Engine"</em> below to run the AI on your PC without paying for cloud servers.';
+                hint.innerHTML = '✦ <strong>Merchant Tip:</strong> Run the companion script on your Mac or PC to process high-resolution photos locally.';
             }
         }
         return false;
@@ -229,13 +229,13 @@ const AdminManager = (() => {
             categoryLabel: categoryLabel,
             price: price,
             originalPrice: Math.round(price * 1.25),
-            description: description || `Professional e-commerce product photograph created with Aura AI Studio using ${templateName}.`,
+            description: description || `Artisanal product presentation with calibrated studio lighting (${templateName}).`,
             image: imageSrc,
             phonePhoto: _rawPhonePhotoUrl || null,
             template: templateName
         });
 
-        Utils.showToast(`🎉 Published "${newProduct.title}" to your E-Commerce Storefront!`, 'success', 3500);
+        Utils.showToast(`Published "${newProduct.title}" to collection!`, 'success', 3500);
 
         // Reset form inputs for next product
         if (titleInput) titleInput.value = '';
@@ -286,7 +286,7 @@ const AdminManager = (() => {
                     </div>
                 </td>
                 <td class="font-semibold text-gray-900">Rs. ${p.price.toLocaleString()}</td>
-                <td><span class="badge-pill badge-pill--studio">${Utils.escapeHtml(p.template || 'Studio AI')}</span></td>
+                <td><span class="badge-pill badge-pill--studio">${Utils.escapeHtml(p.template || 'Studio Card')}</span></td>
                 <td><span class="badge-pill badge-pill--stock">Active</span></td>
                 <td>
                     <div class="table-actions">
