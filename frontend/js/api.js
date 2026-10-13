@@ -8,8 +8,8 @@ const ApiService = (() => {
     // Automatically switch between Localhost and Production Hugging Face URL
     const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     
-    // Set your deployed Hugging Face Space URL here (or via window.API_BASE_URL)
-    const PROD_URL = window.API_BASE_URL || 'https://YOUR_HF_SPACE_URL.hf.space';
+    // Production Render Backend URL (or configurable via window.API_BASE_URL)
+    const PROD_URL = window.API_BASE_URL || 'https://background-remover-mk8t.onrender.com';
     
     const BASE_URL = isLocal ? 'http://127.0.0.1:8000' : PROD_URL;
 
@@ -105,7 +105,7 @@ const ApiService = (() => {
     /**
      * POST /api/reprocess — fast re-compositing of already-extracted cutout.
      */
-    async function reprocessImage(resultId, settings = {}) {
+    async function reprocessImage(resultId, settings = {}, updatedCutoutBlob = null) {
         cancelProcessing();
         _currentAbort = new AbortController();
 
@@ -118,6 +118,9 @@ const ApiService = (() => {
         if (settings.shadow_intensity != null) formData.append('shadow_intensity', String(settings.shadow_intensity));
         if (settings.shadow_softness != null) formData.append('shadow_softness', String(settings.shadow_softness));
         if (settings.output_format) formData.append('output_format', settings.output_format);
+        if (updatedCutoutBlob) {
+            formData.append('updated_cutout', updatedCutoutBlob, 'edited_cutout.png');
+        }
 
         const res = await _request('/api/reprocess', {
             method: 'POST',
@@ -144,6 +147,13 @@ const ApiService = (() => {
      */
     function getPreviewURL(resultId) {
         return `${BASE_URL}/api/results/${resultId}/preview`;
+    }
+
+    /**
+     * Get the raw cutout image URL for eraser / touchup tool.
+     */
+    function getCutoutURL(resultId) {
+        return `${BASE_URL}/api/results/${resultId}/cutout`;
     }
 
     /**
@@ -180,6 +190,7 @@ const ApiService = (() => {
         reprocessImage,
         cancelProcessing,
         getPreviewURL,
+        getCutoutURL,
         getDownloadURL,
         getTemplatePreviewURL,
         downloadResult

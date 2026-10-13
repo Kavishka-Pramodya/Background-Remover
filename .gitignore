@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+*$py.class
+backend/data/results/*
+!backend/data/results/.gitkeep
+.pytest_cache/
+*.mp4
+tests/sample_product.png
+tests/__pycache__/
+backend/__pycache__/
+backend/*/__pycache__/

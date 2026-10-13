@@ -22,6 +22,7 @@ const App = (() => {
         TemplateManager.init(onTemplateSelected);
         ControlsManager.init(onControlsChanged);
         PreviewManager.init();
+        EraserManager.init();
 
         // Wire up buttons
         _bindActions();
@@ -51,6 +52,16 @@ const App = (() => {
         }
         if (btnDownloadJPEG) {
             btnDownloadJPEG.addEventListener('click', () => onDownload('jpeg'));
+        }
+
+        // Touch-up / Eraser buttons
+        const btnOpenEraser = Utils.$('btnOpenEraser');
+        const btnTouchupAction = Utils.$('btnTouchupAction');
+        if (btnOpenEraser) {
+            btnOpenEraser.addEventListener('click', onOpenEraser);
+        }
+        if (btnTouchupAction) {
+            btnTouchupAction.addEventListener('click', onOpenEraser);
         }
 
         // Reprocess with current settings
@@ -300,6 +311,48 @@ const App = (() => {
 
         if (errorText) errorText.textContent = message;
         Utils.show(errorEl);
+    }
+
+    function onOpenEraser() {
+        const resultId = PreviewManager.getResultId();
+        if (!resultId || !state.hasResult) {
+            Utils.showToast('Please create an image first before touching up.', 'error');
+            return;
+        }
+
+        EraserManager.open(resultId, onEraserApply);
+    }
+
+    async function onEraserApply(cutoutBlob) {
+        const resultId = PreviewManager.getResultId();
+        if (!resultId) return;
+
+        const templateId = TemplateManager.getSelectedId() || 'premium_light';
+        const settings = {
+            template_id: templateId,
+            ...ControlsManager.getValues()
+        };
+
+        state.isProcessing = true;
+        const processingMsg = Utils.$('processingMessage');
+        const processingSub = Utils.$('processingSubmessage');
+        if (processingMsg) processingMsg.textContent = 'Applying eraser touch-up...';
+        if (processingSub) processingSub.textContent = 'Re-compositing studio background...';
+
+        Utils.show(Utils.$('processingState'));
+
+        try {
+            const result = await ApiService.reprocessImage(resultId, settings, cutoutBlob);
+            state.isProcessing = false;
+            Utils.hide(Utils.$('processingState'));
+            PreviewManager.showResult(result);
+            Utils.showToast('Touch-up applied successfully!', 'success');
+        } catch (err) {
+            state.isProcessing = false;
+            Utils.hide(Utils.$('processingState'));
+            console.error('Error applying eraser touchup:', err);
+            Utils.showToast(err.message || 'Failed to apply touch-up.', 'error');
+        }
     }
 
     function onResetClick() {

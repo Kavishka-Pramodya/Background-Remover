@@ -21,6 +21,19 @@ async def get_result_preview(result_id: str):
 
     raise HTTPException(status_code=404, detail="Output file not found.")
 
+@router.get("/results/{result_id}/cutout")
+async def get_result_cutout(result_id: str):
+    """Return the raw transparent product cutout for eraser/touch-up editing."""
+    result_dir = RESULTS_DIR / result_id
+    if not result_dir.exists():
+        raise HTTPException(status_code=404, detail="Result not found or expired.")
+
+    cutout_path = result_dir / "cutout.png"
+    if not cutout_path.exists():
+        raise HTTPException(status_code=404, detail="Cutout file not found.")
+
+    return FileResponse(cutout_path, media_type="image/png")
+
 @router.get("/results/{result_id}/download")
 async def download_result(result_id: str, format: str = "png"):
     result_dir = RESULTS_DIR / result_id

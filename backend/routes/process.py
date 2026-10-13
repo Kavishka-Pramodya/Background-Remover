@@ -1,5 +1,6 @@
 import json
 import asyncio
+import io
 from datetime import datetime
 from PIL import Image
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
@@ -51,7 +52,7 @@ async def process_image(
             # 2. Run background removal (execute in thread pool to prevent blocking)
             cutout_rgba = await asyncio.to_thread(remove_background, validated_img)
 
-            # 3. Save the transparent cutout for instant re-compositing
+            # 3. Save the transparent cutout for instant re-compositing and eraser editing
             cutout_path = result_dir / "cutout.png"
             await asyncio.to_thread(cutout_rgba.save, cutout_path, "PNG")
 
@@ -79,6 +80,7 @@ async def process_image(
                 "result_id": result_id,
                 "status": "completed",
                 "preview_url": f"/api/results/{result_id}/preview",
+                "cutout_url": f"/api/results/{result_id}/cutout",
                 "download_url": f"/api/results/{result_id}/download",
                 "original_filename": image.filename,
                 "original_dimensions": [orig_w, orig_h],
@@ -110,17 +112,18 @@ async def reprocess_image(
     position_y: int = Form(50),
     shadow_intensity: int = Form(40),
     shadow_softness: int = Form(30),
-    output_format: str = Form("png")
+    output_format: str = Form("png"),
+    updated_cutout: UploadFile = File(None)
 ):
     """
-    Ultra-fast re-compositing using the pre-extracted transparent cutout.
+    Ultra-fast re-compositing using pre-extracted or edited transparent cutout.
     Takes ~50ms instead of re-running AI background removal!
     """
     result_dir = RESULTS_DIR / result_id
     cutout_path = result_dir / "cutout.png"
 
-    if not result_dir.exists() or not cutout_path.exists():
-        raise HTTPException(status_code=404, detail="Previous cutout not found. Please upload again.")
+    if not result_dir.exists():
+        raise HTTPException(status_code=404, detail="Previous result not found. Please upload again.")
 
     if template_id not in TEMPLATES:
         template_id = "premium_light"
@@ -132,10 +135,20 @@ async def reprocess_image(
     shadow_softness = max(0, min(100, shadow_softness))
 
     try:
-        # Load pre-extracted cutout directly (instant)
+        # If user touched-up with eraser and uploaded a modified cutout
+        if updated_cutout is not None:
+            cutout_bytes = await updated_cutout.read()
+            if cutout_bytes:
+                new_cutout = Image.open(io.BytesIO(cutout_bytes)).convert("RGBA")
+                await asyncio.to_thread(new_cutout.save, cutout_path, "PNG")
+
+        if not cutout_path.exists():
+            raise HTTPException(status_code=404, detail="Cutout not found.")
+
+        # Load cutout
         cutout_rgba = await asyncio.to_thread(Image.open, cutout_path)
 
-        # Composite onto new template with new adjustments
+        # Composite onto new template with adjustments
         composited = await asyncio.to_thread(
             composite_product_image,
             cutout_rgba=cutout_rgba,
