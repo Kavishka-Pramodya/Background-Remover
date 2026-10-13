@@ -226,8 +226,12 @@ const App = (() => {
             } catch { /* ignore */ }
 
             if (!state.backendAvailable) {
-                Utils.showToast('Cannot connect to the server. Please ensure the backend is running.', 'error');
-                _showProcessingError('Server not available. Start the backend with: uvicorn backend.main:app --host 127.0.0.1 --port 8000');
+                const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                const msg = isLocal
+                    ? 'Server not available. Start the local backend with: uvicorn backend.main:app --host 127.0.0.1 --port 8000'
+                    : 'Cloud backend is starting up or waking from sleep. Please wait a moment and click Try Again.';
+                Utils.showToast('Connecting to the cloud server...', 'info');
+                _showProcessingError(msg);
                 return;
             }
         }

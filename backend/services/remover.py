@@ -1,9 +1,16 @@
 import os
 import logging
 import threading
+from pathlib import Path
 from PIL import Image
 
 logger = logging.getLogger(__name__)
+
+# Point U2NET_HOME to bundled models if available for offline, instant zero-download loading
+BUNDLED_MODELS_DIR = Path(__file__).resolve().parent.parent / "models"
+if (BUNDLED_MODELS_DIR / "u2netp.onnx").exists():
+    os.environ["U2NET_HOME"] = str(BUNDLED_MODELS_DIR)
+    logger.info(f"Using bundled model directory: {BUNDLED_MODELS_DIR}")
 
 # Global session holder
 _session = None

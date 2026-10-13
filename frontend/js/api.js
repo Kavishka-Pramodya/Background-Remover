@@ -44,7 +44,10 @@ const ApiService = (() => {
             }
             if (!err.status) {
                 // Network error
-                const netErr = new Error('Cannot connect to the server. Please ensure the backend is running on port 8000.');
+                const msg = isLocal
+                    ? 'Cannot connect to the local server. Please ensure the backend is running on port 8000.'
+                    : 'Cannot connect to the cloud server. If it was sleeping, it takes ~30 seconds to wake up. Please click Try Again in a moment.';
+                const netErr = new Error(msg);
                 netErr.networkError = true;
                 throw netErr;
             }
