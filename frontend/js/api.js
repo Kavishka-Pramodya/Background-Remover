@@ -113,7 +113,23 @@ const ApiService = (() => {
         });
 
         _currentAbort = null;
-        return res.json();
+        const data = await res.json();
+        if (data.data_url) {
+            data.preview_url = data.data_url;
+        } else if (data.result_id) {
+            try {
+                const previewRes = await fetch(getPreviewURL(data.result_id));
+                if (previewRes.ok) {
+                    const blob = await previewRes.blob();
+                    data.preview_url = URL.createObjectURL(blob);
+                } else {
+                    data.preview_url = getPreviewURL(data.result_id);
+                }
+            } catch {
+                data.preview_url = getPreviewURL(data.result_id);
+            }
+        }
+        return data;
     }
 
     /**
@@ -143,7 +159,23 @@ const ApiService = (() => {
         });
 
         _currentAbort = null;
-        return res.json();
+        const data = await res.json();
+        if (data.data_url) {
+            data.preview_url = data.data_url;
+        } else if (data.result_id) {
+            try {
+                const previewRes = await fetch(getPreviewURL(data.result_id));
+                if (previewRes.ok) {
+                    const blob = await previewRes.blob();
+                    data.preview_url = URL.createObjectURL(blob);
+                } else {
+                    data.preview_url = getPreviewURL(data.result_id);
+                }
+            } catch {
+                data.preview_url = getPreviewURL(data.result_id);
+            }
+        }
+        return data;
     }
 
     /**
@@ -198,6 +230,7 @@ const ApiService = (() => {
     }
 
     return {
+        getBaseURL,
         checkHealth,
         getTemplates,
         processImage,

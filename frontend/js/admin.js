@@ -147,7 +147,11 @@ const AdminManager = (() => {
 
         const previewImg = Utils.$('livePreviewCardImg');
         if (previewImg) {
-            previewImg.src = dataUrlOrUrl;
+            let finalUrl = dataUrlOrUrl;
+            if (finalUrl && finalUrl.startsWith('/api/') && typeof ApiService !== 'undefined') {
+                finalUrl = `${ApiService.getBaseURL()}${finalUrl}`;
+            }
+            previewImg.src = finalUrl;
         }
 
         const btnPublish = Utils.$('btnPublishProduct');

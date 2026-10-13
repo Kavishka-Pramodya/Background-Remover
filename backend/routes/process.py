@@ -1,6 +1,7 @@
 import json
 import asyncio
 import io
+import base64
 from datetime import datetime
 from PIL import Image
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
@@ -75,11 +76,18 @@ async def process_image(
             await asyncio.to_thread(export_image, composited, png_path, "png")
             await asyncio.to_thread(export_image, composited, jpeg_path, "jpeg")
 
-            # 6. Save metadata
+            # 6. Generate base64 Data URL for instant, zero-CORS, mixed-content-proof browser rendering
+            buffered = io.BytesIO()
+            composited.convert("RGB").save(buffered, format="JPEG", quality=85, optimize=True)
+            img_b64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
+            data_url = f"data:image/jpeg;base64,{img_b64}"
+
+            # 7. Save metadata
             metadata = {
                 "result_id": result_id,
                 "status": "completed",
                 "preview_url": f"/api/results/{result_id}/preview",
+                "data_url": data_url,
                 "cutout_url": f"/api/results/{result_id}/cutout",
                 "download_url": f"/api/results/{result_id}/download",
                 "original_filename": image.filename,
@@ -166,12 +174,11 @@ async def reprocess_image(
         await asyncio.to_thread(export_image, composited, png_path, "png")
         await asyncio.to_thread(export_image, composited, jpeg_path, "jpeg")
 
-        # Update metadata
-        meta_path = result_dir / "metadata.json"
-        metadata = {}
-        if meta_path.exists():
-            with open(meta_path, "r") as f:
-                metadata = json.load(f)
+        # Generate base64 Data URL for instant rendering
+        buffered = io.BytesIO()
+        composited.convert("RGB").save(buffered, format="JPEG", quality=85, optimize=True)
+        img_b64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
+        metadata["data_url"] = f"data:image/jpeg;base64,{img_b64}"
 
         metadata["template_id"] = template_id
         metadata["output_format"] = output_format.lower()

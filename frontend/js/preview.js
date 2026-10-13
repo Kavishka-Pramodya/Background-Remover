@@ -49,12 +49,17 @@ const PreviewManager = (() => {
      */
     function showResult(resultData) {
         _resultId = resultData.result_id;
-        _resultURL = resultData.preview_url || ApiService.getPreviewURL(resultData.result_id);
+        let targetUrl = resultData.preview_url || resultData.data_url || (resultData.result_id ? ApiService.getPreviewURL(resultData.result_id) : '');
+        if (targetUrl && targetUrl.startsWith('/api/')) {
+            targetUrl = `${ApiService.getBaseURL()}${targetUrl}`;
+        }
+        _resultURL = targetUrl;
 
         const resultCard = Utils.$('previewResult');
         const resultImg = Utils.$('resultImage');
 
-        const displayUrl = _resultURL.startsWith('data:') ? _resultURL : `${_resultURL}?t=${Date.now()}`;
+        const isDirectSource = _resultURL.startsWith('data:') || _resultURL.startsWith('blob:');
+        const displayUrl = isDirectSource ? _resultURL : `${_resultURL}?t=${Date.now()}`;
 
         if (resultImg) {
             resultImg.src = displayUrl;
