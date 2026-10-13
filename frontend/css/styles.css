@@ -153,19 +153,6 @@ button, input, select, textarea {
     display: none !important;
 }
 
-/* ---------- ANNOUNCEMENT BAR ---------- */
-.announcement-bar {
-    background: #18181b;
-    color: #e4e4e7;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    text-align: center;
-    padding: 8px 16px;
-    border-bottom: 1px solid #27272a;
-}
-
 /* ---------- HEADER ---------- */
 .app-header {
     position: sticky;
