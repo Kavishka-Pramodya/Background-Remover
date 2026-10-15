@@ -17,7 +17,15 @@ const App = (() => {
     };
 
     function init() {
-        // Initialize modules
+        // Initialize Core Firebase & Multi-Tenant Services
+        if (typeof FirebaseConfig !== 'undefined') FirebaseConfig.init();
+        if (typeof AuthManager !== 'undefined') {
+            AuthManager.init();
+            AuthManager.onAuthStateChanged(_onRoleChanged);
+        }
+        if (typeof OrderManager !== 'undefined') OrderManager.init();
+
+        // Initialize Store & Studio modules
         if (typeof StoreManager !== 'undefined') StoreManager.init();
         if (typeof AdminManager !== 'undefined') AdminManager.init();
         UploadManager.init(onFileAccepted);
@@ -34,6 +42,45 @@ const App = (() => {
 
         // Check backend health
         _checkBackend();
+    }
+
+    function _onRoleChanged(user) {
+        const activeLabel = Utils.$('roleQuickActiveLabel');
+        const btnAdmin1 = Utils.$('btnSwitchAdmin1');
+        const btnAdmin2 = Utils.$('btnSwitchAdmin2');
+        const btnClient = Utils.$('btnSwitchClient');
+        const btnGuest = Utils.$('btnSwitchGuest');
+
+        const role = user ? user.role : 'guest';
+
+        // Update Persona Buttons
+        [btnAdmin1, btnAdmin2, btnClient, btnGuest].forEach(b => {
+            if (b) b.classList.remove('btn-role-switch--active');
+        });
+
+        if (role === 'admin1' && btnAdmin1) btnAdmin1.classList.add('btn-role-switch--active');
+        if (role === 'admin2' && btnAdmin2) btnAdmin2.classList.add('btn-role-switch--active');
+        if (role === 'client' && btnClient) btnClient.classList.add('btn-role-switch--active');
+        if (role === 'guest' && btnGuest) btnGuest.classList.add('btn-role-switch--active');
+
+        if (activeLabel) {
+            if (role === 'admin1') activeLabel.innerHTML = `Logged in as: <strong>Admin 1 · Super Admin (${user.displayName})</strong>`;
+            else if (role === 'admin2') activeLabel.innerHTML = `Logged in as: <strong>Admin 2 · Partner Merchant (${user.displayName})</strong>`;
+            else if (role === 'client') activeLabel.innerHTML = `Logged in as: <strong>Customer (${user.displayName})</strong>`;
+            else activeLabel.innerHTML = `Browsing as: <strong>Guest Visitor</strong>`;
+        }
+
+        // Update Firebase Pill in Admin tab
+        const fbPill = Utils.$('firebaseStatusPill');
+        if (fbPill) {
+            if (typeof FirebaseConfig !== 'undefined' && FirebaseConfig.isLive()) {
+                fbPill.className = 'role-pill role-pill--client';
+                fbPill.innerHTML = `🔥 Connected to Live Cloud Firestore (${FirebaseConfig.getConfig().projectId})`;
+            } else {
+                fbPill.className = 'role-pill role-pill--admin1';
+                fbPill.innerHTML = `⚡ Local Storage Fallback Active (Zero Cloud Config Required)`;
+            }
+        }
     }
 
     function _bindActions() {
@@ -187,6 +234,12 @@ const App = (() => {
             if (navAdminPortal) navAdminPortal.classList.remove('active');
             if (typeof StoreManager !== 'undefined') StoreManager.renderProducts();
         } else if (screenName === 'admin' || screenName === 'upload') {
+            if (typeof AuthManager !== 'undefined' && !AuthManager.isAdmin()) {
+                Utils.showToast('Please sign in as Admin 1 or Admin 2 to access Merchant Studio.', 'warning');
+                const authModal = Utils.$('authModal');
+                if (authModal) Utils.show(authModal);
+                return;
+            }
             if (screenStorefront) screenStorefront.classList.remove('active');
             if (screenAdmin) screenAdmin.classList.add('active');
             if (screenUpload) Utils.show(screenUpload);

@@ -9,8 +9,15 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
+
+    <!-- Firebase SDK (Compat v10 for zero-build direct browser support) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
 </head>
 <body>
+
     <!-- ===== APP HEADER ===== -->
     <header class="app-header" id="appHeader">
         <div class="header-inner">
@@ -22,7 +29,7 @@
                 </div>
                 <div class="brand-text">
                     <span class="brand-name">AURA</span>
-                    <span class="brand-badge">Atelier & Studio</span>
+                    <span class="brand-badge">Atelier & Multi-Vendor</span>
                 </div>
             </div>
 
@@ -31,7 +38,7 @@
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                     <span>Collection</span>
                 </button>
-                <button class="nav-btn" id="navAdminPortal" type="button">
+                <button class="nav-btn" id="navAdminPortal" type="button" style="display: none;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                     <span>Merchant Studio</span>
                     <span class="nav-pill-badge">Studio</span>
@@ -41,6 +48,22 @@
                     <span>Cart</span>
                     <span class="cart-badge" id="cartBadge">0</span>
                 </button>
+
+                <!-- User Profile & Auth in Header -->
+                <div class="header-user-badge hidden" id="headerUserBadge">
+                    <div class="user-avatar-circle" id="userAvatarCircle">👤</div>
+                    <div class="user-info-text">
+                        <span class="user-name" id="headerUserName">Kavishka Pramodya</span>
+                        <span class="role-pill role-pill--admin1" id="headerRolePill">👑 Admin 1</span>
+                    </div>
+                    <button class="btn btn--ghost btn--xs" id="btnLogout" onclick="AuthManager.logout()" type="button" title="Sign Out">✕</button>
+                </div>
+
+                <button class="btn btn--outline btn--sm" id="btnOpenAuthModal" onclick="AuthManager.openAuthModal('signin')" type="button">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <span>Sign In</span>
+                </button>
+
                 <button class="nav-btn nav-btn--icon" id="navHelp" type="button" title="Guide & Overview">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                 </button>
@@ -64,7 +87,7 @@
                     </p>
                     <div class="hero-actions">
                         <a href="#storeCatalog" class="btn btn--primary btn--lg">Explore Collection</a>
-                        <button class="btn btn--outline btn--lg" id="btnGoToAdmin" type="button">
+                        <button class="btn btn--outline btn--lg" id="btnGoToAdmin" type="button" style="display: none;">
                             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M12 5v14M5 12h14"/></svg>
                             Merchant Studio · Create Product
                         </button>
@@ -114,8 +137,11 @@
                 <!-- Admin Top Bar -->
                 <div class="admin-topbar">
                     <div>
-                        <span class="admin-kicker">Merchant Studio</span>
-                        <h2 class="admin-heading">Product Photography & Catalogue Manager</h2>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="admin-kicker">Merchant Studio</span>
+                            <span class="role-pill role-pill--admin1" id="adminWelcomeRoleBadge">👑 Admin 1 · Super Admin</span>
+                        </div>
+                        <h2 class="admin-heading" id="adminActiveStoreTitle">Aura Prime Atelier · Catalogue Manager</h2>
                     </div>
                     <div class="admin-topbar__actions">
                         <button class="btn btn--ghost btn--sm" id="btnBackToStore" type="button">
@@ -163,19 +189,29 @@
                         </div>
                     </div>
                     <div class="engine-companion__actions">
-                        <a href="https://github.com/Kavishka-Pramodya/Background-Remover/archive/refs/heads/main.zip" target="_blank" rel="noopener" class="btn btn--primary" id="btnDownloadEngineZip">
-                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                            Download Studio Engine (.zip)
-                        </a>
-                        <a href="downloads/start_local_studio.bat" download="start_local_studio.bat" class="btn btn--outline btn--sm" id="btnDownloadBat" title="For Windows PCs">
-                            Windows (.bat)
-                        </a>
-                        <a href="downloads/start_local_studio.command" download="start_local_studio.command" class="btn btn--outline btn--sm" id="btnDownloadMac" title="For Apple MacBooks & iMacs">
-                            macOS (.command)
-                        </a>
-                        <button class="btn btn--ghost btn--sm" onclick="AdminManager.checkLocalHealth()" type="button">
-                            Check Engine
-                        </button>
+                        <div class="engine-os-selector">
+                            <div class="engine-download-btn-group">
+                                <a href="downloads/Aura-Engine-Windows.zip" download="Aura-Engine-Windows.zip" class="btn btn--primary btn--sm" id="btnDownloadWindowsZip" title="Download Standalone Engine for Windows 10/11 (64-bit)">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-13.051-1.802"/></svg>
+                                    <span>Download for Windows (.zip)</span>
+                                </a>
+                                <a href="downloads/Aura-Engine-macOS.zip" download="Aura-Engine-macOS.zip" class="btn btn--outline btn--sm" id="btnDownloadMacZip" title="Download Standalone Engine for macOS (Apple Silicon M1/M2/M3/M4 & Intel)">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.62-.75 1.04-1.8 0.92-2.85-.9.04-1.99.6-2.61 1.34-.55.63-1.03 1.66-.9 2.68 1 .08 2.01-.48 2.59-1.17z"/></svg>
+                                    <span>Download for macOS (.zip)</span>
+                                </a>
+                                <button class="btn btn--ghost btn--sm" onclick="AdminManager.checkLocalHealth()" type="button" title="Test local connection on port 8000">
+                                    🔄 Test Connection
+                                </button>
+                            </div>
+                            <div class="engine-os-subtext">
+                                <span>⚡ <strong>Permanent 1-Click:</strong> Installs dependencies once into dedicated virtualenv. Next launches start in &lt;1 second.</span>
+                            </div>
+                            <div class="engine-direct-links">
+                                Direct scripts:
+                                <a href="downloads/start_local_studio.bat" download="start_local_studio.bat">Windows (.bat)</a> ·
+                                <a href="downloads/start_local_studio.command" download="start_local_studio.command">macOS (.command)</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -185,7 +221,17 @@
                         Capture & Studio Preset
                     </button>
                     <button class="admin-tab-btn" data-tab="catalog" type="button">
-                        Catalogue Management
+                        My Store Catalogue
+                    </button>
+                    <button class="admin-tab-btn" data-tab="orders" type="button">
+                        Incoming Orders <span class="tab-badge" id="adminOrderCountBadge">0</span>
+                        <span class="tab-pending-badge" id="adminPendingCountBadge" style="display:none;">0 Pending</span>
+                    </button>
+                    <button class="admin-tab-btn" data-tab="admin2" id="admin2TabBtn" type="button">
+                        👥 Manage Admin 2 & Users
+                    </button>
+                    <button class="admin-tab-btn" data-tab="firebase" type="button">
+                        🔥 Firebase Cloud Sync
                     </button>
                 </div>
 
@@ -352,7 +398,7 @@
                                     <input type="text" id="adminProdTitle" class="form-input" placeholder="e.g. Tuscan Leather Travel Holdall" value="Tuscan Leather Travel Holdall">
                                 </div>
 
-                                <div class="form-row">
+                                <div class="form-row" style="grid-template-columns: 1fr 1fr 1fr;">
                                     <div class="form-group">
                                         <label for="adminProdCategory" class="form-label">Category</label>
                                         <select id="adminProdCategory" class="form-select">
@@ -366,6 +412,10 @@
                                     <div class="form-group">
                                         <label for="adminProdPrice" class="form-label">Price (LKR) *</label>
                                         <input type="number" id="adminProdPrice" class="form-input" placeholder="18500" value="18500">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="adminProdStock" class="form-label">Stock Inventory *</label>
+                                        <input type="number" id="adminProdStock" class="form-input" placeholder="10" value="10" min="0">
                                     </div>
                                 </div>
 
@@ -427,8 +477,8 @@
                                         <th>#</th>
                                         <th>Product</th>
                                         <th>Price</th>
-                                        <th>Photography Type</th>
-                                        <th>Status</th>
+                                        <th>Stock Inventory</th>
+                                        <th>Storefront Status</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -436,6 +486,173 @@
                                     <!-- Populated by admin.js -->
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: INCOMING ORDERS & DISPATCH NOTIFICATIONS -->
+                <div class="admin-tab-content" id="adminTab_orders">
+                    <div class="catalog-manage-card">
+                        <div class="catalog-manage-header">
+                            <div>
+                                <h3 class="catalog-manage-title">Incoming Customer Orders</h3>
+                                <p class="catalog-manage-subtitle">Orders containing products from your store. Client checkout details are routed directly to your dispatch dashboard.</p>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="catalog-table">
+                                <thead>
+                                    <tr>
+                                        <th>Order Ref</th>
+                                        <th>Customer & Delivery</th>
+                                        <th>Items Ordered</th>
+                                        <th>Amount</th>
+                                        <th>Fulfillment Status</th>
+                                        <th>Dispatch / Contact</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminOrdersTableBody">
+                                    <!-- Populated by orders.js -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div id="adminOrdersEmptyState" class="empty-catalog-state hidden" style="padding: 40px 20px;">
+                            <div class="empty-icon">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                            </div>
+                            <h3>No customer orders yet</h3>
+                            <p>When a client adds your product to cart and clicks "Proceed to Checkout", your order ticket and direct dispatch message will appear here in real time.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 4: MANAGE ADMIN 2 (SUPER ADMIN EXCLUSIVE) -->
+                <div class="admin-tab-content" id="adminTab_admin2">
+                    <div class="catalog-manage-card" id="admin2ManagementSection">
+                        <div class="catalog-manage-header">
+                            <div>
+                                <h3 class="catalog-manage-title">Admin 2 & Partner Merchant Management</h3>
+                                <p class="catalog-manage-subtitle">As Super Admin (Admin 1 · Kavishka Pramodya), you can register, invite, and configure store permissions for Admin 2.</p>
+                            </div>
+                        </div>
+
+                        <div id="admin2CurrentStatus">
+                            <!-- Populated by admin.js -->
+                        </div>
+
+                        <div class="product-form-card" style="max-width: 600px; margin-top: 1.5rem; background: #fff; border: 1px solid #e4e4e7; border-radius: 12px; padding: 24px;">
+                            <h4 style="margin-bottom: 12px; font-weight: 700; color: #18181b;">Register or Update Admin 2</h4>
+                            <form id="formRegisterAdmin2">
+                                <div class="form-group" style="margin-bottom: 12px;">
+                                    <label class="form-label">Admin 2 Full Name</label>
+                                    <input type="text" id="admin2RegName" class="form-input" placeholder="e.g. Elena Vance" value="Elena Vance" required>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 12px;">
+                                    <label class="form-label">Admin 2 Login Email</label>
+                                    <input type="email" id="admin2RegEmail" class="form-input" placeholder="e.g. admin2@aurastudio.com" value="admin2@aurastudio.com" required>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 12px;">
+                                    <label class="form-label">Admin 2 Password</label>
+                                    <input type="password" id="admin2RegPassword" class="form-input" placeholder="Password for Admin 2" value="admin2password" required>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 16px;">
+                                    <label class="form-label">Admin 2 Store / Brand Name</label>
+                                    <input type="text" id="admin2RegStore" class="form-input" placeholder="e.g. Luxe Horizon Curation" value="Luxe Horizon Curation" required>
+                                </div>
+                                <button type="submit" class="btn btn--primary btn--full">
+                                    💾 Save & Register Admin 2
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Registered Clients / User Management Section -->
+                        <div class="catalog-manage-card" style="margin-top: 2rem; background: #fff; border: 1px solid #e4e4e7; border-radius: 12px; padding: 24px;">
+                            <div class="catalog-manage-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                                <div>
+                                    <h3 class="catalog-manage-title" style="font-size: 18px; font-weight: 700; color: #18181b;">Registered Shoppers & Customer Accounts</h3>
+                                    <p class="catalog-manage-subtitle" style="font-size: 13px; color: #71717a;">View registered client accounts, contact details, and customer WhatsApp contacts.</p>
+                                </div>
+                                <span class="role-pill role-pill--client" id="adminClientCountBadge" style="font-size: 12px;">0 Customers</span>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="catalog-table">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Customer Name & Email</th>
+                                            <th>WhatsApp / Phone</th>
+                                            <th>Delivery Address</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="adminUsersTableBody">
+                                        <!-- Populated by admin.js renderRegisteredUsersTable() -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 5: FIREBASE CLOUD SYNC -->
+                <div class="admin-tab-content" id="adminTab_firebase">
+                    <div class="catalog-manage-card">
+                        <div class="catalog-manage-header">
+                            <div>
+                                <h3 class="catalog-manage-title">🔥 Firebase Cloud Backend Configuration</h3>
+                                <p class="catalog-manage-subtitle">Connect your Firebase project to enable Cloud Firestore, Cloud Storage for product images, and Cloud Authentication.</p>
+                            </div>
+                        </div>
+
+                        <div style="background: #fafafa; border: 1px solid #e4e4e7; border-radius: 10px; padding: 18px; margin-bottom: 20px;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                                <strong>Cloud Connection Status:</strong>
+                                <span id="firebaseStatusPill" class="role-pill role-pill--admin1" style="font-size: 12px;">
+                                    ⚡ Local Storage Fallback Active (Zero Setup Required)
+                                </span>
+                            </div>
+                            <p style="font-size: 13px; color: #71717a; line-height: 1.5;">
+                                Your system is currently 100% operational with multi-admin roles, checkout dispatch, and real-time order routing. When you copy your keys from <strong>Firebase Console > Project Settings > Web App</strong>, paste them below to enable permanent Google Cloud storage!
+                            </p>
+                        </div>
+
+                        <div class="product-form-card" style="max-width: 650px; background: #fff; border: 1px solid #e4e4e7; border-radius: 12px; padding: 24px;">
+                            <h4 style="margin-bottom: 14px; font-weight: 700; color: #18181b;">Paste Your Firebase Web App Config</h4>
+                            <div class="form-group" style="margin-bottom: 12px;">
+                                <label class="form-label">apiKey</label>
+                                <input type="text" id="fbConfigApiKey" class="form-input" value="AIzaSyCT9eJpHcar4tnm5qs4aDqRvkpTNcDaMJU">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 12px;">
+                                <label class="form-label">projectId</label>
+                                <input type="text" id="fbConfigProjectId" class="form-input" value="syncmart-71ef5">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 12px;">
+                                <label class="form-label">authDomain</label>
+                                <input type="text" id="fbConfigAuthDomain" class="form-input" value="syncmart-71ef5.firebaseapp.com">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 12px;">
+                                <label class="form-label">storageBucket</label>
+                                <input type="text" id="fbConfigStorageBucket" class="form-input" value="syncmart-71ef5.firebasestorage.app">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 12px;">
+                                <label class="form-label">appId</label>
+                                <input type="text" id="fbConfigAppId" class="form-input" value="1:838088841055:web:31bd442e1c0c0d727108ea">
+                            </div>
+                            <div style="display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap;">
+                                <button type="button" class="btn btn--primary" id="btnTestFirebase" onclick="_handleTestFirebaseUI()">
+                                    🧪 Test Cloud Connection
+                                </button>
+                                <button type="button" class="btn btn--secondary" id="btnSyncToCloud" onclick="_handleSyncToFirebaseUI()" style="background: #15803d; color: #fff; border: none;">
+                                    🚀 Upload & Sync Products to Firebase Console
+                                </button>
+                                <button type="button" class="btn btn--outline" onclick="FirebaseConfig.clearCustomConfig()">
+                                    Reset to Default
+                                </button>
+                            </div>
+                            <div id="fbLiveTestResult" style="display: none; margin-top: 14px; padding: 12px; border-radius: 8px; font-size: 13px; line-height: 1.5; background: #f8fafc; border: 1px solid #e2e8f0;"></div>
                         </div>
                     </div>
                 </div>
@@ -650,8 +867,239 @@
         <button id="btnToggleComparison"></button>
     </div>
 
+    <!-- ===== CHECKOUT MODAL ===== -->
+    <div class="modal-overlay hidden" id="checkoutModal">
+        <div class="modal modal--quickview" style="max-width: 820px;" role="dialog" aria-labelledby="checkoutTitle">
+            <div class="modal-header">
+                <div>
+                    <h2 id="checkoutTitle">Dispatch Checkout & Delivery Details</h2>
+                    <p style="font-size: 13px; color: var(--color-gray-500); margin-top: 4px;">
+                        Orders are automatically routed to the specific seller/admin who published each product.
+                    </p>
+                </div>
+                <button class="modal-close" onclick="StoreManager.closeCheckoutModal()" type="button">✕</button>
+            </div>
+            <div class="modal-body" style="padding: 1.5rem;">
+                <form id="checkoutForm" onsubmit="_handleCheckoutSubmit(event)">
+                    <div class="checkout-modal-grid">
+                        <!-- Left: Customer Information -->
+                        <div>
+                            <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 12px; color: #18181b;">1. Delivery Information</h4>
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label class="form-label">Full Name *</label>
+                                <input type="text" id="checkoutCustomerName" class="form-input" placeholder="e.g. Nipuni Fernando" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label class="form-label">WhatsApp / Contact Number *</label>
+                                <input type="tel" id="checkoutCustomerPhone" class="form-input" placeholder="e.g. +94 77 123 4567" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label class="form-label">Email Address (Optional)</label>
+                                <input type="email" id="checkoutCustomerEmail" class="form-input" placeholder="e.g. customer@example.com">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label class="form-label">Delivery Street Address *</label>
+                                <textarea id="checkoutCustomerAddress" class="form-textarea" rows="2" placeholder="House no, Street name" required></textarea>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label class="form-label">City / Town *</label>
+                                <input type="text" id="checkoutCustomerCity" class="form-input" placeholder="e.g. Colombo 03, Kandy, Galle" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Special Delivery Instructions</label>
+                                <input type="text" id="checkoutCustomerNotes" class="form-input" placeholder="e.g. Call before delivery / deliver after 4 PM">
+                            </div>
+                        </div>
+
+                        <!-- Right: Merchant Order Package Breakdown -->
+                        <div>
+                            <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 12px; color: #18181b;">2. Merchant Order Packages</h4>
+                            <div id="checkoutCartSummary">
+                                <!-- Populated dynamically by StoreManager.openCheckoutModal -->
+                            </div>
+
+                            <div style="background: #f4f4f5; border-radius: 8px; padding: 14px; margin-top: 14px;">
+                                <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 700; color: #18181b;">
+                                    <span>Grand Total:</span>
+                                    <span id="checkoutGrandTotal">Rs. 0</span>
+                                </div>
+                                <div style="font-size: 12px; color: #71717a; margin-top: 4px;">
+                                    Payment Method: <strong>Cash on Delivery / Direct Bank Transfer</strong>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn--primary btn--lg btn--full" id="btnPlaceOrder" style="margin-top: 16px;">
+                                🛍️ Confirm Order & Notify Seller
+                            </button>
+                            <p style="font-size: 11px; color: #a1a1aa; text-align: center; margin-top: 8px;">
+                                By placing this order, each seller will be instantly dispatched your order details.
+                            </p>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== ORDER SUCCESS MODAL ===== -->
+    <div class="modal-overlay hidden" id="orderSuccessModal">
+        <div class="modal" style="max-width: 560px;" role="dialog">
+            <div class="modal-body" style="padding: 2rem; text-align: center;">
+                <div style="width: 56px; height: 56px; border-radius: 50%; background: #dcfce7; color: #15803d; font-size: 28px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+                    ✓
+                </div>
+                <h2 style="font-size: 22px; font-weight: 800; color: #18181b; margin-bottom: 8px;">Order Placed Successfully!</h2>
+                <p style="font-size: 14px; color: #71717a; line-height: 1.5; margin-bottom: 20px;">
+                    Thank you! Your order details have been securely recorded and dispatched directly to the merchant administrators.
+                </p>
+
+                <div id="orderSuccessTicketsList" style="text-align: left; margin-bottom: 24px;">
+                    <!-- Populated dynamically with created order tickets and WhatsApp contact links -->
+                </div>
+
+                <button class="btn btn--primary btn--lg btn--full" onclick="Utils.hide(Utils.$('orderSuccessModal'))" type="button">
+                    Continue Shopping
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== EDIT PRODUCT & STOCK MODAL ===== -->
+    <div class="modal-overlay hidden" id="editProductModal">
+        <div class="modal" style="max-width: 500px;" role="dialog" aria-labelledby="editProductModalTitle">
+            <div class="modal-header">
+                <div>
+                    <h2 id="editProductModalTitle">Edit Product & Inventory</h2>
+                    <p style="font-size: 12px; color: #71717a;">Update pricing, stock count, or toggle live storefront visibility</p>
+                </div>
+                <button class="modal-close" onclick="AdminManager.closeEditModal()" type="button">✕</button>
+            </div>
+            <div class="modal-body" style="padding: 1.5rem;">
+                <form id="editProductForm" onsubmit="event.preventDefault(); AdminManager.saveEditedProduct();">
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label class="form-label">Product Title</label>
+                        <input type="text" id="editProdTitle" class="form-input" required>
+                    </div>
+                    <div class="form-row" style="margin-bottom: 12px;">
+                        <div class="form-group">
+                            <label class="form-label">Price (LKR)</label>
+                            <input type="number" id="editProdPrice" class="form-input" required min="1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Stock Quantity</label>
+                            <input type="number" id="editProdStock" class="form-input" required min="0">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 20px; background: #fafafa; border: 1px solid #e4e4e7; border-radius: 8px; padding: 12px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; font-weight: 600; color: #18181b;">
+                            <input type="checkbox" id="editProdActive" style="width: 16px; height: 16px; accent-color: #18181b;">
+                            <span>Product is Live on Storefront</span>
+                        </label>
+                        <p style="font-size: 11px; color: #71717a; margin-top: 4px; margin-left: 24px;">
+                            Uncheck to temporarily deactivate this product and hide it from customer collection.
+                        </p>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="submit" class="btn btn--primary btn--full btn--lg">
+                            💾 Save Changes
+                        </button>
+                        <button type="button" class="btn btn--outline btn--lg" onclick="AdminManager.closeEditModal()">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== AUTHENTICATION & ROLE LOGIN / SIGN UP MODAL ===== -->
+    <div class="modal-overlay hidden" id="authModal">
+        <div class="modal" style="max-width: 480px;" role="dialog">
+            <div class="modal-header">
+                <div>
+                    <h2>Aura Atelier Access</h2>
+                    <p style="font-size: 12px; color: #71717a;">Sign in or create an account to start shopping</p>
+                </div>
+                <button class="modal-close" onclick="AuthManager.closeAuthModal()" type="button">✕</button>
+            </div>
+
+            <!-- Dual Tabs: Sign In vs Sign Up -->
+            <div class="auth-tabs-nav">
+                <button type="button" class="auth-tab-btn active" id="authTabBtnSignIn" onclick="AuthManager.openAuthModal('signin')">
+                    Sign In
+                </button>
+                <button type="button" class="auth-tab-btn" id="authTabBtnSignUp" onclick="AuthManager.openAuthModal('signup')">
+                    Create Account (Sign Up)
+                </button>
+            </div>
+
+            <div class="modal-body" style="padding: 0 1.5rem 1.5rem 1.5rem;">
+                <!-- TAB 1: Sign In Form -->
+                <div id="authViewSignIn">
+                    <form id="authLoginForm" onsubmit="_handleLoginFormSubmit(event)">
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label class="form-label">Email Address *</label>
+                            <input type="email" id="authLoginEmail" class="form-input" placeholder="e.g. customer@example.com" value="kavishkapramodya2004@gmail.com" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 16px;">
+                            <label class="form-label">Password *</label>
+                            <input type="password" id="authLoginPassword" class="form-input" placeholder="Enter password" value="200416604334" required>
+                        </div>
+                        <button type="submit" class="btn btn--primary btn--full btn--lg">
+                            Sign In
+                        </button>
+                    </form>
+
+                    <div style="margin-top: 14px; text-align: center; font-size: 13px; color: #71717a;">
+                        New to Aura? <a href="javascript:void(0)" onclick="AuthManager.openAuthModal('signup')" style="color: #18181b; font-weight: 700; text-decoration: underline;">Create an account</a>
+                    </div>
+
+                    <div style="margin-top: 16px; padding: 10px; background: #fafafa; border: 1px solid #e4e4e7; border-radius: 8px; font-size: 11px; color: #71717a; text-align: center;">
+                        👑 Default Super Admin: <code>kavishkapramodya2004@gmail.com</code>
+                    </div>
+                </div>
+
+                <!-- TAB 2: Sign Up (Register) Form -->
+                <div id="authViewSignUp" class="hidden">
+                    <form id="authRegisterForm" onsubmit="_handleRegisterFormSubmit(event)">
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label class="form-label">Full Name *</label>
+                            <input type="text" id="authRegName" class="form-input" placeholder="e.g. Nipuni Fernando" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label class="form-label">Email Address *</label>
+                            <input type="email" id="authRegEmail" class="form-input" placeholder="e.g. nipuni@gmail.com" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label class="form-label">WhatsApp / Phone Number *</label>
+                            <input type="tel" id="authRegPhone" class="form-input" placeholder="e.g. +94 77 123 4567" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label class="form-label">Delivery Street Address & City</label>
+                            <input type="text" id="authRegAddress" class="form-input" placeholder="e.g. No 18, Queen's Road, Colombo 03">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 16px;">
+                            <label class="form-label">Create Password *</label>
+                            <input type="password" id="authRegPassword" class="form-input" placeholder="Minimum 6 characters" required>
+                        </div>
+                        <button type="submit" class="btn btn--primary btn--full btn--lg">
+                            Create Account & Start Shopping
+                        </button>
+                    </form>
+
+                    <div style="margin-top: 14px; text-align: center; font-size: 13px; color: #71717a;">
+                        Already registered? <a href="javascript:void(0)" onclick="AuthManager.openAuthModal('signin')" style="color: #18181b; font-weight: 700; text-decoration: underline;">Sign In here</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ===== JAVASCRIPT MODULES ===== -->
     <script src="js/utils.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/orders.js"></script>
     <script src="js/api.js"></script>
     <script src="js/store.js"></script>
     <script src="js/admin.js"></script>
@@ -661,5 +1109,169 @@
     <script src="js/preview.js"></script>
     <script src="js/eraser.js"></script>
     <script src="js/app.js"></script>
+
+    <!-- Global Helpers for Checkout & Auth Forms -->
+    <script>
+        async function _handleCheckoutSubmit(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnPlaceOrder');
+            if (btn) btn.disabled = true;
+
+            try {
+                const customerName = document.getElementById('checkoutCustomerName').value.trim();
+                const customerPhone = document.getElementById('checkoutCustomerPhone').value.trim();
+                const customerEmail = document.getElementById('checkoutCustomerEmail').value.trim();
+                const customerAddress = document.getElementById('checkoutCustomerAddress').value.trim();
+                const customerCity = document.getElementById('checkoutCustomerCity').value.trim();
+                const notes = document.getElementById('checkoutCustomerNotes').value.trim();
+
+                const orders = await OrderManager.processCheckout({
+                    customerName, customerPhone, customerEmail, customerAddress, customerCity, notes
+                });
+
+                StoreManager.closeCheckoutModal();
+
+                // Show Order Success Modal
+                const successModal = document.getElementById('orderSuccessModal');
+                const ticketsList = document.getElementById('orderSuccessTicketsList');
+
+                if (ticketsList) {
+                    ticketsList.innerHTML = orders.map(ord => {
+                        const cleanPhone = (ord.adminPhone || '').replace(/[^0-9]/g, '');
+                        const waMsg = encodeURIComponent(
+                            `Hello ${ord.adminStoreName}!\nI just placed Order #${ord.orderNumber} for:\n` +
+                            ord.items.map(i => `• ${i.quantity}x ${i.title}`).join('\n') +
+                            `\nTotal: Rs. ${ord.totalAmount.toLocaleString()}\n` +
+                            `My Name: ${ord.clientName}\nPhone: ${ord.clientPhone}\nAddress: ${ord.clientAddress}, ${ord.clientCity}`
+                        );
+                        const waUrl = `https://wa.me/${cleanPhone || '94771234567'}?text=${waMsg}`;
+
+                        return `
+                            <div class="checkout-merchant-group" style="margin-bottom: 12px; background: #fff; border: 1px solid #d4d4d8;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                    <strong>Ticket #${ord.orderNumber}</strong>
+                                    <span class="role-pill ${ord.adminRole === 'admin2' ? 'role-pill--admin2' : 'role-pill--admin1'}">
+                                        ${ord.adminStoreName}
+                                    </span>
+                                </div>
+                                <div style="font-size: 13px; color: #52525b; margin-bottom: 8px;">
+                                    ${ord.items.map(i => `${i.quantity}x ${i.title}`).join(', ')} • <strong>Rs. ${ord.totalAmount.toLocaleString()}</strong>
+                                </div>
+                                <div style="display: flex; gap: 8px;">
+                                    <a href="${waUrl}" target="_blank" rel="noopener" class="btn btn--outline btn--xs" style="color: #15803d; border-color: #86efac;">
+                                        💬 Notify Merchant on WhatsApp
+                                    </a>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+
+                if (successModal) Utils.show(successModal);
+
+            } catch (err) {
+                Utils.showToast(err.message || 'Checkout failed. Please try again.', 'error');
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        async function _handleLoginFormSubmit(e) {
+            e.preventDefault();
+            const email = document.getElementById('authLoginEmail').value.trim();
+            const pass = document.getElementById('authLoginPassword').value.trim();
+
+            try {
+                const user = await AuthManager.loginWithEmailPassword(email, pass);
+                AuthManager.closeAuthModal();
+                Utils.showToast(`Welcome back, ${user.displayName}! Signed in as ${user.role.toUpperCase()}`, 'success');
+            } catch (err) {
+                Utils.showToast(err.message, 'error');
+            }
+        }
+
+        async function _handleRegisterFormSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('authRegName').value.trim();
+            const email = document.getElementById('authRegEmail').value.trim();
+            const phone = document.getElementById('authRegPhone').value.trim();
+            const address = document.getElementById('authRegAddress').value.trim();
+            const password = document.getElementById('authRegPassword').value.trim();
+
+            try {
+                const user = await AuthManager.registerClient({ name, email, password, phone, address });
+                AuthManager.closeAuthModal();
+                Utils.showToast(`Welcome, ${user.displayName}! Your account has been created.`, 'success', 4000);
+            } catch (err) {
+                Utils.showToast(err.message, 'error');
+            }
+        }
+
+        function _handleSaveFirebaseUI() {
+            const apiKey = document.getElementById('fbConfigApiKey').value.trim();
+            const projectId = document.getElementById('fbConfigProjectId').value.trim();
+            const authDomain = document.getElementById('fbConfigAuthDomain').value.trim();
+            const storageBucket = document.getElementById('fbConfigStorageBucket').value.trim();
+            const appId = document.getElementById('fbConfigAppId').value.trim();
+
+            if (!apiKey || !projectId) {
+                Utils.showToast('Please provide at least apiKey and projectId.', 'error');
+                return;
+            }
+
+            FirebaseConfig.saveCustomConfig({
+                apiKey,
+                projectId,
+                authDomain: authDomain || `${projectId}.firebaseapp.com`,
+                storageBucket: storageBucket || `${projectId}.appspot.com`,
+                appId: appId || ''
+            });
+        }
+
+        async function _handleTestFirebaseUI() {
+            const resBox = document.getElementById('fbLiveTestResult');
+            if (resBox) {
+                resBox.style.display = 'block';
+                resBox.innerHTML = '⏳ Testing connection to Google Cloud Firestore...';
+                resBox.style.color = '#71717a';
+            }
+            const res = await FirebaseConfig.testCloudConnection();
+            if (resBox) {
+                resBox.style.display = 'block';
+                if (res.status === 'success') {
+                    resBox.innerHTML = `<strong>${res.message}</strong>`;
+                    resBox.style.color = '#15803d';
+                    Utils.showToast('Firebase connection test passed!', 'success');
+                } else {
+                    resBox.innerHTML = `<strong>${res.message}</strong>`;
+                    resBox.style.color = '#dc2626';
+                    Utils.showToast(res.message, 'warning', 6000);
+                }
+            }
+        }
+
+        async function _handleSyncToFirebaseUI() {
+            const resBox = document.getElementById('fbLiveTestResult');
+            try {
+                if (resBox) {
+                    resBox.style.display = 'block';
+                    resBox.innerHTML = '⏳ Uploading store products & registered users to Firebase Cloud...';
+                    resBox.style.color = '#2563eb';
+                }
+                const syncRes = await FirebaseConfig.syncAllDataToCloud();
+                if (resBox) {
+                    resBox.innerHTML = `<strong>🎉 Successfully Synced ${syncRes.productsCount} Products & ${syncRes.usersCount} Users to Firebase Cloud! Check your Firebase Console now!</strong>`;
+                    resBox.style.color = '#15803d';
+                }
+                Utils.showToast('All products & users synced to Firebase Cloud!', 'success');
+            } catch (err) {
+                if (resBox) {
+                    resBox.innerHTML = `<strong>❌ Upload failed: ${err.message}</strong>`;
+                    resBox.style.color = '#dc2626';
+                }
+                Utils.showToast(err.message, 'error', 6000);
+            }
+        }
+    </script>
 </body>
 </html>

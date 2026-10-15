@@ -830,6 +830,41 @@ button, input, select, textarea {
     align-items: flex-end;
 }
 
+.engine-os-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-end;
+}
+
+.engine-download-btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.engine-os-subtext {
+    font-size: 11px;
+    color: var(--color-gray-500);
+    text-align: right;
+    max-width: 420px;
+    line-height: 1.4;
+}
+
+.engine-direct-links {
+    font-size: 11px;
+    color: var(--color-gray-400);
+}
+
+.engine-direct-links a {
+    color: var(--color-primary);
+    text-decoration: underline;
+    font-weight: 600;
+}
+
+
 /* Admin Tabs */
 .admin-tabs {
     display: flex;
@@ -2023,7 +2058,439 @@ button, input, select, textarea {
         width: 100vw;
         height: 100vh;
         max-width: 100vw;
-        max-height: 100vh;
-        border-radius: 0;
+}
+
+/* ==============================================================
+   MULTI-ADMIN, ROLE AUTH & ORDER DISPATCH STYLES
+   ============================================================== */
+
+/* Demo Role Switcher Strip */
+.role-quick-bar {
+    background: #18181b;
+    color: #e4e4e7;
+    padding: 6px 16px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.role-quick-bar__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #a1a1aa;
+}
+
+.role-quick-bar__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-role-switch {
+    background: rgba(255, 255, 255, 0.08);
+    color: #f4f4f5;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 2px 10px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-role-switch:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: #fff;
+    transform: translateY(-1px);
+}
+
+.btn-role-switch--active {
+    background: #fff;
+    color: #18181b;
+    font-weight: 700;
+}
+
+/* User Account Badge in Header */
+.header-user-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 12px;
+    background: #fafafa;
+    border: 1px solid #e4e4e7;
+    border-radius: 9999px;
+}
+
+.user-avatar-circle {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #18181b;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+}
+
+.user-info-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: #18181b;
+    line-height: 1.2;
+}
+
+/* Role Pills */
+.role-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.role-pill--admin1 {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+}
+
+.role-pill--admin2 {
+    background: #e0e7ff;
+    color: #3730a3;
+    border: 1px solid #c7d2fe;
+}
+
+.role-pill--client {
+    background: #ecfdf5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+
+/* Merchant Badges on Cards */
+.merchant-badge,
+.store-card__merchant-tag,
+.cart-item__merchant-tag,
+.publisher-filter-row {
+    display: none !important;
+}
+
+/* Orders Table & Components */
+.order-table-row td {
+    padding: 16px 14px;
+    border-bottom: 1px solid #e4e4e7;
+    vertical-align: top;
+}
+
+.order-num-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.order-date {
+    font-size: 11px;
+    color: #71717a;
+}
+
+.customer-info-col {
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.customer-phone {
+    color: #2563eb;
+    font-weight: 500;
+    margin-top: 2px;
+}
+
+.customer-address {
+    color: #52525b;
+    font-size: 12px;
+    margin-top: 2px;
+}
+
+.customer-notes {
+    font-size: 11px;
+    color: #d97706;
+    background: #fffbeb;
+    padding: 3px 6px;
+    border-radius: 4px;
+    margin-top: 4px;
+    display: inline-block;
+}
+
+.order-item-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 13px;
+}
+
+.order-item-thumb {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    object-fit: cover;
+    border: 1px solid #e4e4e7;
+}
+
+.order-status-select {
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid #d4d4d8;
+    font-size: 12px;
+    background: #fff;
+    font-weight: 600;
+    margin-top: 6px;
+    cursor: pointer;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+}
+
+.badge--warning { background: #fef3c7; color: #92400e; }
+.badge--info { background: #e0f2fe; color: #0369a1; }
+.badge--primary { background: #e0e7ff; color: #3730a3; }
+.badge--success { background: #dcfce7; color: #15803d; }
+.badge--danger { background: #fee2e2; color: #b91c1c; }
+
+/* Admin 2 Management Section */
+.admin2-info-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.admin2-badge {
+    display: inline-block;
+    background: #3b82f6;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.admin2-meta-row {
+    display: flex;
+    gap: 20px;
+    font-size: 13px;
+    color: #475569;
+    margin: 8px 0;
+    flex-wrap: wrap;
+}
+
+.admin2-tip {
+    font-size: 12px;
+    color: #64748b;
+    background: #f1f5f9;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-top: 8px;
+}
+
+/* Checkout Modal */
+.checkout-modal-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 24px;
+}
+
+@media (max-width: 768px) {
+    .checkout-modal-grid {
+        grid-template-columns: 1fr;
     }
 }
+
+.checkout-merchant-group {
+    background: #fafafa;
+    border: 1px solid #e4e4e7;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+}
+
+.checkout-merchant-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed #e4e4e7;
+}
+
+.checkout-merchant-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: #18181b;
+}
+
+.checkout-item-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    margin-bottom: 4px;
+}
+
+.checkout-item-qty {
+    font-weight: 700;
+    color: #71717a;
+    font-size: 12px;
+}
+
+.checkout-item-name {
+    flex: 1;
+    color: #18181b;
+}
+
+.checkout-item-price {
+    font-weight: 600;
+    color: #18181b;
+}
+
+.checkout-group-subtotal {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px solid #e4e4e7;
+    font-size: 12px;
+    color: #52525b;
+}
+
+.tab-badge {
+    background: #e4e4e7;
+    color: #18181b;
+    padding: 1px 6px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-left: 4px;
+}
+
+.tab-pending-badge {
+    background: #ef4444;
+    color: #fff;
+    padding: 1px 7px;
+    border-radius: 9999px;
+    font-size: 10px;
+    font-weight: 700;
+    margin-left: 4px;
+    animation: pulse 2s infinite;
+}
+
+/* Modal Auth Tabs */
+.auth-tabs-nav {
+    display: flex;
+    border-bottom: 1px solid #e4e4e7;
+    margin-bottom: 18px;
+}
+
+.auth-tab-btn {
+    flex: 1;
+    text-align: center;
+    padding: 10px 14px;
+    background: none;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    color: #71717a;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.auth-tab-btn:hover {
+    color: #18181b;
+}
+
+.auth-tab-btn.active {
+    color: #18181b;
+    border-bottom-color: #18181b;
+}
+
+/* Status Toggles in Catalog Table */
+.btn-status-toggle {
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.btn-status-toggle--active {
+    background: #dcfce7;
+    color: #15803d;
+    border-color: #86efac;
+}
+
+.btn-status-toggle--active:hover {
+    background: #bbf7d0;
+}
+
+.btn-status-toggle--inactive {
+    background: #f4f4f5;
+    color: #71717a;
+    border-color: #d4d4d8;
+}
+
+.btn-status-toggle--inactive:hover {
+    background: #e4e4e7;
+    color: #18181b;
+}
+
+/* Out of Stock & Sold Out button */
+.btn-add-cart--soldout {
+    background: #e4e4e7 !important;
+    color: #a1a1aa !important;
+    border: 1px solid #d4d4d8 !important;
+    cursor: not-allowed !important;
+    box-shadow: none !important;
+}
+
+.store-card--soldout .store-card__img {
+    filter: grayscale(30%);
+}
+
+.store-stock-indicator {
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.opacity-50 {
+    opacity: 0.55;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+

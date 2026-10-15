@@ -13,8 +13,8 @@ const ApiService = (() => {
         if (typeof AdminManager !== 'undefined' && AdminManager.isLocalEngineActive()) {
             return 'http://127.0.0.1:8000';
         }
-        // 2. If running on localhost in development
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        // 2. If running on localhost or local file system in development
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') {
             return 'http://127.0.0.1:8000';
         }
         // 3. Fallback to Cloud deployment
@@ -54,6 +54,7 @@ const ApiService = (() => {
                 // Network error
                 const isLocal = window.location.hostname === 'localhost' || 
                                 window.location.hostname === '127.0.0.1' || 
+                                window.location.protocol === 'file:' ||
                                 (typeof AdminManager !== 'undefined' && AdminManager.isLocalEngineActive());
                 const msg = isLocal
                     ? 'Cannot connect to local backend (port 8000). Please ensure start_local_studio.bat is running.'
